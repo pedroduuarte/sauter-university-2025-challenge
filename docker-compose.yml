@@ -1,0 +1,24 @@
+# Para usar, execute:
+# > docker-compose up -d
+#
+# Depois execute o PSQL dentro do container:
+# > docker exec -it postgres_university psql -U university
+# 
+# Agora você pode fazer consultas sql (no terminal XD)
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres_university
+    environment:
+      POSTGRES_USER: university
+      POSTGRES_PASSWORD: university
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
