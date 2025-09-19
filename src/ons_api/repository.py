@@ -10,25 +10,21 @@ app = FastAPI(title="Teste de API para dados dos reservatórios ONS")
 
 
 class ONSRepository:
-    URL_PACKAGE_SEARCH = "https://dados.ons.org.br/api/3/action/package_search?q=ear-diario-por-reservatorio"
-    RESOURCES_CACHE = "resources.json"
+    PACKAGE_ID = "61e92787-9847-4731-8b73-e878eb5bc158"
+    URL_PACKAGE_SHOW = "https://dados.ons.org.br/api/3/action/package_show?id="
+    URL_RESOURCE_SHOW = "https://dados.ons.org.br/api/3/action/resource_show?id="
+
 
     def search_all_resources(self):
         """
         Busca todos os resources disponíveis no dataset.
         """
-        # checa se o cache existe para otimização de performance
-        if os.path.exists(self.RESOURCES_CACHE):
-            with open(self.RESOURCES_CACHE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        
-        # caso não exista, busca da ONS
-        resp = requests.get(ONSRepository.URL_PACKAGE_SEARCH)
+        resp = requests.get(f"{self.URL_PACKAGE_SHOW}{self.PACKAGE_ID}")
         if resp.status_code != 200:
             raise HTTPException(status_code=500, detail="Erro ao consultar o package_search.")
         
         data = resp.json()
-        package = data["result"]["results"][0]  # primeiro dataset
+        package = data["result"]
         resources = package["resources"]
 
         # filtrando arquivos csv
@@ -41,12 +37,20 @@ class ONSRepository:
             for r in resources if r["format"].lower() == "csv"
         ]
 
-        with open(self.RESOURCES_CACHE, "w", encoding="utf-8") as f:
-            json.dump(resources, f, ensure_ascii=False, indent=2)
-
         return csv_resources
     
-    def download_csv(self, url: str) -> pd.DataFrame:
+    def get_resource_url(self, resource_id: str):
+        resp = requests.get(f"{self.URL_RESOURCE_SHOW}{resource_id}")
+        if resp.status_code != 200:
+            raise HTTPException(status_code=500, detail=f"Failed to fetch resource id from: {resource_id}")
+        data = resp.json()
+        return data["result"]["url"]
+    
+    def download_csv_by_id(self, resource_id: str) -> pd.DataFrame:
+        """
+        Download the resource by the resource id
+        """
+        url = self.get_resource_url(resource_id)
         resp = requests.get(url)
         if resp.status_code != 200:
             raise HTTPException(status_code=500, detail=f"Failed to download data from {url}")
@@ -87,7 +91,7 @@ class ONSRepository:
                 print(f"Not found any resource for {year}")
                 continue
 
-            df = self.download_csv(resource["url"])
+            df = self.download_csv_by_id(resource["id"])
             print("DEBUG DF:", type(df))
             if df is None:
              print("DataFrame é None!")
