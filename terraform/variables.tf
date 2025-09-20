@@ -43,12 +43,25 @@ variable "format" {
 
 # variable cloud_run
 
-# variable apis
-
-variable "apis" {
-  type        = list(string)
-  default     = ["artifactregistry.googleapis.com", "cloudrun.googleapis.com"]
+variable "service_name" {
+    description = "The name of the Cloud Run service."
+    type        = string
+    default = "sauter-cloud-run-service"
   
 }
 
+variable "image_url" {
+    description = "The URL of the container image to deploy."
+    type        = string
+    default = "us-docker.pkg.dev/cloudrun/container/hello"
+}
 
+
+# variable bucket
+
+variable "bucket_name" {
+  description = "The name of the bucket."
+  type        = string
+  default = "sauter-bucket-2025"
+  
+}

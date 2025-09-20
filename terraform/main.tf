@@ -5,19 +5,19 @@ module "artifact_registry" {
   repository_id = var.repository_id
   description   = var.description
   labels        = var.labels
-  depends_on = [ module.project ]
 
 }
 
-#module "cloudrun" {
- # source       = "./modules/cloud_run"
-  #service_name = "sauter-cloud-run-service"
-  #region       = var.region
-  #image_url    = var.image_url
-#}
+module "cloudrun" {
+  source       = "./modules/cloud_run"
+  service_name = var.service_name
+  region       = var.region
+  image_url    = var.image_url
+}
 
-module "project" {
-  source     = "./modules/apis"
-  project_id = var.project_id
-  apis       = var.apis
+module "bucket" {
+  source      = "./modules/bucket"
+  bucket_name = var.bucket_name
+  location    = var.location
+  labels      = { environment = "dev", team = "sauter" }
 }

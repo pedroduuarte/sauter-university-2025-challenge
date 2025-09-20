@@ -1,1 +1,4 @@
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
 .terraform/
