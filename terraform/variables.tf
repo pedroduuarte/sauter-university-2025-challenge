@@ -26,10 +26,6 @@ variable "repository_id" {
   default = "sauter-projet-repo"
 }
 
-variable "description" {
-  type        = string
-  default     = "repositorio do projeto sauter"
-}
 
 variable "labels" {
   type        = map(string)
@@ -63,5 +59,54 @@ variable "bucket_name" {
   description = "The name of the bucket."
   type        = string
   default = "sauter-bucket-2025"
+  
+}
+
+# variable big_query
+
+variable "dataset_id" {
+  description = "The ID of the dataset to create."
+  type        = string
+  default = "reservatorios_externos_dataset"
+}
+
+variable "friendly_name" {
+  description = "A descriptive name for the dataset."
+  type        = string
+  default     = "test"
+}
+
+variable "location-big-query" {
+  description = "The geographic location where the dataset should reside."
+  type        = string
+  default     = "US"
+  
+}
+
+variable "default_table_expiration_ms" {
+  description = "The default lifetime of all tables in the dataset, in milliseconds."
+  type        = number
+  default     = 3600000
+}
+
+
+variable "table_id" {
+  description = "The ID of the table to create."
+  type        = string
+  default     = "reservatorios_externos"
+}
+
+
+  
+variable "source_format" {
+  description = "The format of the external data source."
+  type        = string
+  default     = "PARQUET"
+}
+
+variable "source_uris" {
+  description = "The URIs of the external data source."
+  type        = list(string)
+  default     = ["gs://sauter-bucket-2025/raw/*.parquet"]
   
 }

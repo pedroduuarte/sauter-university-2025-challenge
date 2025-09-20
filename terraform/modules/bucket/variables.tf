@@ -7,7 +7,7 @@ variable "bucket_name" {
 variable "location" {
   description = "The location of the bucket."
   type        = string
-  default     = "US"
+  default     = ""
   
 }
 
