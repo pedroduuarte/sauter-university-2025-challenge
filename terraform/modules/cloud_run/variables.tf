@@ -14,3 +14,4 @@ variable "image_url" {
     description = "The URL of the container image to deploy."
     type        = string
 }
+
