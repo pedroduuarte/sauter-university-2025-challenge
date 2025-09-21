@@ -110,3 +110,17 @@ variable "source_uris" {
   default     = ["gs://sauter-bucket-2025/raw/*.parquet"]
   
 }
+
+# variable iam
+
+variable "cloudrun_sa_name" {
+  type        = string
+  default     = "cloudrun-sa"
+  description = "Nome da service account para o Cloud Run"
+}
+
+variable "github_sa_name" {
+  type        = string
+  default     = "github-actions-sa"
+  description = "Nome da service account para o GitHub Actions"
+}

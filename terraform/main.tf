@@ -12,6 +12,7 @@ module "cloudrun" {
   service_name = var.service_name
   region       = var.region
   image_url    = var.image_url
+  service_account_email = module.iam.cloudrun_service_account_email
 }
 
 module "bucket" {
@@ -32,4 +33,11 @@ module "big_query" {
   table_id                     = var.table_id
   source_format                = var.source_format
   source_uris                  = var.source_uris
+}
+
+module "iam" {
+  source            = "./modules/iam"
+  project_id        = var.project_id
+  cloudrun_sa_name  = "cloudrun-sa"
+  github_sa_name    = "github-actions-sa"
 }
