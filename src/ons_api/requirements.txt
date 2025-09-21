@@ -4,3 +4,4 @@ pandas
 pyarrow
 google-cloud-storage
 requests
+python-dotenv

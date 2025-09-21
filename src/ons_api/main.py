@@ -6,7 +6,7 @@ from datetime import datetime
 
 app = FastAPI(title= "ONS EAR API")
 service = ONSService()
-BUCKET_NAME = "sauter-bucket-2025"
+
 
 @app.get("/dados")
 def get_dados(
@@ -31,7 +31,7 @@ def export_all_data():
         if df.empty:
             raise HTTPException(status_code=404, detail="Nenhum dado encontrado para exportar.")
 
-        blob_path = service.upload_parquet_to_bucket(df, BUCKET_NAME)
+        blob_path = service.upload_parquet_to_bucket(df)
         return {"message": "Dados exportados com sucesso!", "file": blob_path}
 
     except Exception as e:

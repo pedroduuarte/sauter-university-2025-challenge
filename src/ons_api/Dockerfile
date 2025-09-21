@@ -7,7 +7,7 @@ WORKDIR /app
 # Variável de ambiente do Python
 ENV PYTHONUNBUFFERED=1
 
-# Instalar dependências do sistema (pyarrow, etc.)
+# Instalar dependências do sistema
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     gcc \

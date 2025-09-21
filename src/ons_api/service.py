@@ -1,12 +1,18 @@
 import pandas as pd
-import datetime
+from datetime import datetime
 from google.cloud import storage
 from ons_api.repository import ONSRepository
 from io import BytesIO
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class ONSService:
     def __init__(self):
         self.repo = ONSRepository()
+        self.project_id = os.getenv("PROJECT_ID")
+        self.bucket_name = os.getenv("BUCKET_NAME")
 
     def search_data(self, start_date=None, end_date=None):
         """
@@ -27,12 +33,12 @@ class ONSService:
             "data": data
         }
     
-    def upload_parquet_to_bucket(df: pd.DataFrame, bucket_name: str, source_name="ONS", file_type="PARQUET"):
+    def upload_parquet_to_bucket(self, df: pd.DataFrame, source_name="ONS", file_type="PARQUET"):
         """
         Uploading dataframe in a GCP bucket using Cloud Run
         """
-        client = storage.Client()
-        bucket = client.bucket(bucket_name)
+        client = storage.Client(project=self.project_id)
+        bucket = client.bucket(self.bucket_name)
 
         # upload date 
         now = datetime.now()
@@ -40,7 +46,7 @@ class ONSService:
         month = now.strftime("%m")
         day = now.strftime("%d")
 
-        file_name = f"ons_data_{now.strftime("%Y%m%d")}.parquet"
+        file_name = f"ons_data_{now.strftime('%Y%m%d')}.parquet"
         blob_path = f"raw/{source_name}/{file_type}/{year}/{month}/{day}/{file_name}"
 
         blob = bucket.blob(blob_path)
@@ -50,7 +56,7 @@ class ONSService:
         buffer.seek(0)
 
         blob.upload_from_file(buffer, content_type="application/octet-stream")
-        print(f"File uploaded to gs://{bucket_name}/{blob_path}")
+        print(f"File uploaded to gs://{bucket}/{blob_path}")
 
         return blob_path
     
