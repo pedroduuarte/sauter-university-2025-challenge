@@ -1,6 +1,6 @@
 import pandas as pd
 from datetime import datetime
-from google.cloud import storage
+from google.cloud import storage, bigquery
 from ons_api.repository import ONSRepository
 from io import BytesIO
 import os
@@ -13,6 +13,8 @@ class ONSService:
         self.repo = ONSRepository()
         self.project_id = os.getenv("PROJECT_ID")
         self.bucket_name = os.getenv("BUCKET_NAME")
+        self.bq_dataset = os.getenv("BQ_DATASET")
+        self.table_ref = os.getenv("BQ_TABLE")
 
     def search_data(self, start_date=None, end_date=None):
         """
@@ -60,3 +62,23 @@ class ONSService:
 
         return blob_path
     
+    def load_to_bigquery(self, df: pd.DataFrame):
+        """
+        load DataFrame to BigQuery (all columns as STRING)
+        """
+        client = bigquery.Client(project=self.project_id)
+
+        df = df.astype(str)
+
+        table = f"{self.project_id}.{self.bq_dataset}.{self.table_ref}"
+        job_config = bigquery.LoadJobConfig(
+            write_disposition = bigquery.WriteDisposition.WRITE_APPEND
+        )
+
+        job = client.load_table_from_dataframe(df, table, job_config=job_config)
+        job.result()
+
+        print(f"Data loaded on BigQuery: {table}")
+        return table
+
+

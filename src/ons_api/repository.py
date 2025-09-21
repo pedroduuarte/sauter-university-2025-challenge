@@ -6,9 +6,10 @@ import os
 import json
 from io import BytesIO
 from datetime import datetime
+from ons_api.logging_config import setup_logging
 
-app = FastAPI(title="Teste de API para dados dos reservatórios ONS")
-
+logger = setup_logging()
+app = FastAPI(title="Repository API")
 
 class ONSRepository:
     PACKAGE_ID = "61e92787-9847-4731-8b73-e878eb5bc158"
@@ -18,10 +19,11 @@ class ONSRepository:
 
     def search_all_resources(self):
         """
-        Busca todos os resources disponíveis no dataset.
+        Search all resources avaliable on dataset.
         """
         resp = requests.get(f"{self.URL_PACKAGE_SHOW}{self.PACKAGE_ID}")
         if resp.status_code != 200:
+            logger.error(f"Error on trying to get all resources from EAR")
             raise HTTPException(status_code=500, detail="Erro ao consultar o package_search.")
         
         data = resp.json()
@@ -93,16 +95,17 @@ class ONSRepository:
                 continue
 
             df = self.download_csv_by_id(resource["id"])
-            print("DEBUG DF:", type(df))
+
             if df is None:
-             print("DataFrame é None!")
+             logger.warning("DataFrame is none!")
             else:
-                print("Colunas disponíveis:", df.columns)
+                logger.info(f"Columns avaliable: {df.columns}")
             df["Data"] = pd.to_datetime(df["ear_data"], errors="coerce")
             df = df[(df["Data"] >= start) & (df["Data"] < end)]
             dfs.append(df)
 
         if not dfs:
+            logger.error("Not found any data in the interval.")
             raise HTTPException(status_code=404, detail="Not found any data in the interval.")
         
         return pd.concat(dfs, ignore_index=True)
