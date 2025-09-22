@@ -1,7 +1,6 @@
 variable "project_id" {
   description = "The ID of the project in which to create the Artifact Registry repository."
   type        = string
-  default = "canvas-provider-472313-n5"
   
 }
 
