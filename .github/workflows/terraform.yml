@@ -6,12 +6,12 @@ on:
       - develop
       - main
     paths:
-      - '**.tf'
+      - 'terraform/**.tf'
       - '.github/workflows/terraform.yml'
   
   pull_request:
     paths:
-      - '**.tf'
+      - 'terraform/**.tf'
       - '.github/workflows/terraform.yml'
 
 permissions:
