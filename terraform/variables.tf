@@ -86,7 +86,7 @@ variable "location-big-query" {
 variable "default_table_expiration_ms" {
   description = "The default lifetime of all tables in the dataset, in milliseconds."
   type        = number
-  default     = 3600000
+  default     = null
 }
 
 
