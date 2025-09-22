@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - develop
+      - main
     paths:
       - '**.tf'
       - '.github/workflows/terraform.yml'
@@ -45,7 +46,7 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color
+        run: terraform plan -var="project_id=${{ vars.GCP_PROJECT_ID }}" -no-color
         continue-on-error: true # Permite que a pipeline continue para a próxima etapa
 
       - name: Update Pull Request with Plan
@@ -72,5 +73,5 @@ jobs:
             })
             
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && steps.plan.outcome == 'success'
-        run: terraform apply -auto-approve
+        if: (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main') && github.event_name == 'push' && steps.plan.outcome == 'success'
+        run: terraform apply -var="project_id=${{ vars.GCP_PROJECT_ID }}" -auto-approve

@@ -1,10 +1,10 @@
-# Service Account do Cloud Run
+# Service Account Cloud Run
 resource "google_service_account" "cloudrun_sa" {
   account_id   = var.cloudrun_sa_name
   display_name = "Service Account for Cloud Run"
 }
 
-# Permissões Cloud Run
+# Cloud Run Permissions
 resource "google_project_iam_member" "cloudrun_bigquery_user" {
   project = var.project_id
   role    = "roles/bigquery.user"
@@ -29,14 +29,14 @@ resource "google_project_iam_member" "cloudrun_artifact_registry" {
   member  = "serviceAccount:${google_service_account.cloudrun_sa.email}"
 }
 
-# Service Account para GitHub Actions
+# Service Account from GitHub Actions
 
 resource "google_service_account" "github_sa" {
   account_id   = var.github_sa_name
   display_name = "Service Account for GitHub Actions (via Workload Identity Federation)"
 }
 
-# Permissões para CI/CD
+# CI/CD Permissions
 resource "google_project_iam_member" "github_run_admin" {
   project = var.project_id
   role    = "roles/run.admin"
