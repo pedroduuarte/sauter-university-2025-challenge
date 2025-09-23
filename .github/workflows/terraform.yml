@@ -6,12 +6,12 @@ on:
       - develop
       - main
     paths:
-      - '**.tf'
+      - 'terraform/**'
       - '.github/workflows/terraform.yml'
   
   pull_request:
     paths:
-      - '**.tf'
+      - 'terraform/**'
       - '.github/workflows/terraform.yml'
 
 permissions:
@@ -23,6 +23,10 @@ jobs:
     name: 'Terraform Plan and Apply'
     runs-on: ubuntu-latest
     
+    defaults:
+      run:
+        working-directory: ./terraform
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,10 +49,33 @@ jobs:
         run: terraform fmt -check
 
       - name: Terraform Plan
-        id: plan
-        run: terraform plan ${{ vars.GCP_PROJECT_ID }}
-        continue-on-error: true
+        id: plancx
+        run: terraform plan -var="project_id=${{ vars.GCP_PROJECT_ID }}" -no-color
+        continue-on-error: false
+      
+      - name: Update Pull Request with Plan
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const output = `#### Terraform Plan
+            <details><summary>Show Plan</summary>
 
+            \`\`\`terraform
+            ${{ steps.plan.outputs.stdout }}
+            \`\`\`
+
+            </details>
+            
+            *Pushed by: @${{ github.actor }}, Action: ${{ github.event_name }}*`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+            
       - name: Terraform Apply
         if: (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main') && github.event_name == 'push' && steps.plan.outcome == 'success'
-        run: terraform apply ${{ vars.GCP_PROJECT_ID }} -auto-approve
+        run: terraform apply -var="project_id=${{ vars.GCP_PROJECT_ID }}" -auto-approve
