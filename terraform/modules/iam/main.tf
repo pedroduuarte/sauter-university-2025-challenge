@@ -36,7 +36,18 @@ resource "google_service_account" "github_sa" {
   display_name = "Service Account for GitHub Actions (via Workload Identity Federation)"
 }
 
-# CI/CD Permissions
+resource "google_billing_account_iam_member" "github_billing_manager" {
+  billing_account_id = var.billing_account_id
+  role               = "roles/billing.costsManager"
+  member             = "serviceAccount:${google_service_account.github_sa.email}"
+}
+
+resource "google_project_iam_member" "github_monitoring_editor" {
+  project = var.project_id
+  role    = "roles/monitoring.editor"
+  member  = "serviceAccount:${google_service_account.github_sa.email}"
+}
+
 resource "google_project_iam_member" "github_run_admin" {
   project = var.project_id
   role    = "roles/run.admin"

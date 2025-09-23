@@ -40,4 +40,14 @@ module "iam" {
   project_id        = var.project_id
   cloudrun_sa_name  = "cloudrun-sa"
   github_sa_name    = "github-actions-sa"
+  billing_account_id = var.billing_account_id
+}
+
+module "billing" {
+  source = "./modules/billing"
+
+  billing_account_id  = var.billing_account_id
+  project_id          = var.project_id
+  notification_emails = var.notification_emails
+  budget_amount       = var.budget_amount
 }

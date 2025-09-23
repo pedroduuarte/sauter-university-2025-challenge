@@ -14,3 +14,8 @@ variable "github_sa_name" {
   default     = ""
   description = ""
 }
+
+variable "billing_account_id" {
+  type        = string
+  description = ""
+}

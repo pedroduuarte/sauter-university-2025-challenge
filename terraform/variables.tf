@@ -107,7 +107,6 @@ variable "source_uris" {
   description = "The URIs of the external data source."
   type        = list(string)
   default     = ["gs://sauter-bucket-2025/raw/*.parquet"]
-  
 }
 
 # variable iam
@@ -115,11 +114,48 @@ variable "source_uris" {
 variable "cloudrun_sa_name" {
   type        = string
   default     = "cloudrun-sa"
-  description = "Nome da service account para o Cloud Run"
+  description = "Service account name for Cloud Run"
 }
 
 variable "github_sa_name" {
   type        = string
   default     = "github-actions-sa"
-  description = "Nome da service account para o GitHub Actions"
+  description = "Service account name for GitHub Actions"
+}
+
+# variable billing
+
+variable "billing_account_id" {
+  type        = string
+  description = "Google Cloud billing account ID."
+}
+
+variable "notification_emails" {
+  type        = list(string)
+  description = "The email list to receive budget alerts."
+  default = [
+  "david02tk@gmail.com",
+  "eduardagrigorio2024@gmail.com",
+  "leovic22ofc@gmail.com",
+  "n.santosa01@gmail.com",
+  "pdrlimaduarte@gmail.com"
+ ]
+}
+
+variable "budget_amount" {
+  type        = string
+  description = "The budget amount."
+  default     = "300"
+}
+
+variable "currency_code" {
+  type        = string
+  description = "The currency code."
+  default     = "BRL"
+}
+
+variable "threshold_percentages" {
+  type        = list(number)
+  description = "List of percentages for alerts."
+  default     = [0.5, 0.8, 1.0]
 }
