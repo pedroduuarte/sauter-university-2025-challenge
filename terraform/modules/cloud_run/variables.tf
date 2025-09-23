@@ -17,5 +17,5 @@ variable "image_url" {
 
 variable "service_account_email" {
   type        = string
-  description = "Email da Service Account a ser usada pelo Cloud Run"
+  description = "Email da Service Account Cloud Run"
 }

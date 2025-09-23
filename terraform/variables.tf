@@ -48,7 +48,7 @@ variable "service_name" {
 variable "image_url" {
     description = "The URL of the container image to deploy."
     type        = string
-    default = "us-docker.pkg.dev/cloudrun/container/hello"
+    default = "us-east1-docker.pkg.dev/canvas-provider-472313-n5/sauter-projet-repo/ons-api:v1"
 }
 
 
