@@ -3,7 +3,7 @@ from google.adk.tools import google_search
 
 root_agent = Agent(
     name="sauter_info_agent",
-    model="gemini-2.5-flash",
+    model="gemini-2.0-flash",
     description=(
         "Agente para responder perguntas sobre o site Sauter Digital."
     ),
