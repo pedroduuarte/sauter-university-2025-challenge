@@ -43,21 +43,17 @@ jobs:
       - name: Terraform Init
         id: init
         run: terraform init
-        working-directory: ./terraform
 
       - name: Terraform Format
         id: fmt
         run: terraform fmt -check
-        working-directory: ./terraform
 
       - name: Terraform Plan
         id: plan
         run: terraform plan -var="project_id=${{ vars.GCP_PROJECT_ID }}" -no-color
-        working-directory: ./terraform
-        continue-on-error: true
+        continue-on-error: true # Permite que a pipeline continue para a próxima etapa
 
             
       - name: Terraform Apply
         if: (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main') && github.event_name == 'push' && steps.plan.outcome == 'success'
         run: terraform apply -var="project_id=${{ vars.GCP_PROJECT_ID }}" -auto-approve
-        working-directory: ./terraform
