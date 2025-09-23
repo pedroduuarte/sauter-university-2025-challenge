@@ -49,13 +49,6 @@ jobs:
         run: terraform plan ${{ vars.GCP_PROJECT_ID }}"
         continue-on-error: true
 
-      - name: Update Pull Request with Plan
-        uses: actions/github-script@v7
-        if: github.event_name == 'pull_request'
-        with:
-          script: |
-            # ... seu script de comentário ...
-
       - name: Terraform Apply
         if: (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main') && github.event_name == 'push' && steps.plan.outcome == 'success'
         run: terraform apply ${{ vars.GCP_PROJECT_ID }} -auto-approve
