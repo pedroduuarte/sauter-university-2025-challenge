@@ -2,6 +2,7 @@
 resource "google_service_account" "cloudrun_sa" {
   account_id   = var.cloudrun_sa_name
   display_name = "Service Account for Cloud Run"
+  project      = var.project_id
 }
 
 # Cloud Run Permissions
@@ -33,7 +34,8 @@ resource "google_project_iam_member" "cloudrun_artifact_registry" {
 
 resource "google_service_account" "github_sa" {
   account_id   = var.github_sa_name
-  display_name = "Service Account for GitHub Actions (via Workload Identity Federation)"
+  display_name = "Service Account for GitHub Actions"
+  project      = var.project_id
 }
 
 # CI/CD Permissions
@@ -59,6 +61,14 @@ resource "google_project_iam_member" "github_bigquery" {
   project = var.project_id
   role    = "roles/bigquery.admin"
   member  = "serviceAccount:${google_service_account.github_sa.email}"
+}
+
+resource "google_service_account_iam_binding" "github_sa_token_creator" {
+  service_account_id = google_service_account.github_sa.name
+  role = "roles/iam.serviceAccountTokenCreator"
+  members = [
+    "serviceAccount:${google_service_account.github_sa.email}"
+  ]
 }
 
 resource "google_project_iam_member" "github_sa_user" {
