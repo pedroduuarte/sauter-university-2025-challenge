@@ -51,7 +51,7 @@ jobs:
 
       - name: Terraform Plan
         id: plancx
-        run: terraform plan -var="gcp_project_id=${{ vars.GCP_PROJECT_ID }}" -no-color
+        run: terraform plan -var="project_id=${{ vars.GCP_PROJECT_ID }}" -no-color
         continue-on-error: false
       
       - name: Update Pull Request with Plan
@@ -79,4 +79,4 @@ jobs:
             '
       - name: Terraform Apply
         if: (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main') && github.event_name == 'push' && steps.plancx.outcome == 'success'
-        run: terraform apply -var="gcp_project_id=${{ vars.GCP_PROJECT_ID }}" -auto-approve
+        run: terraform apply -var="project_id=${{ vars.GCP_PROJECT_ID }}" -auto-approve
