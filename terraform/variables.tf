@@ -1,7 +1,7 @@
 variable "project_id" {
   description = "The ID of the project in which to create the Artifact Registry repository."
   type        = string
-  
+
 }
 
 variable "region" {
@@ -15,40 +15,40 @@ variable "region" {
 # variable artifact_registry_repository
 
 variable "location" {
-  type        = string
+  type    = string
   default = "us-east1"
-  
+
 }
 
 variable "repository_id" {
-  type        = string
+  type    = string
   default = "sauter-projet-repo"
 }
 
 
 variable "labels" {
-  type        = map(string)
-  default     = {resource = "terraform"}
+  type    = map(string)
+  default = { resource = "terraform" }
 }
 
 variable "format" {
-  type        = string
-  default     = "DOCKER"
+  type    = string
+  default = "DOCKER"
 }
 
 # variable cloud_run
 
 variable "service_name" {
-    description = "The name of the Cloud Run service."
-    type        = string
-    default = "sauter-cloud-run-service"
-  
+  description = "The name of the Cloud Run service."
+  type        = string
+  default     = "sauter-cloud-run-service"
+
 }
 
 variable "image_url" {
-    description = "The URL of the container image to deploy."
-    type        = string
-    default = "us-east1-docker.pkg.dev/canvas-provider-472313-n5/sauter-projet-repo/ons-api:v1"
+  description = "The URL of the container image to deploy."
+  type        = string
+  default     = "us-east1-docker.pkg.dev/canvas-provider-472313-n5/sauter-projet-repo/ons-api:v1"
 }
 
 
@@ -57,8 +57,8 @@ variable "image_url" {
 variable "bucket_name" {
   description = "The name of the bucket."
   type        = string
-  default = "sauter-bucket-2025"
-  
+  default     = "sauter-bucket-2025"
+
 }
 
 # variable big_query
@@ -66,7 +66,7 @@ variable "bucket_name" {
 variable "dataset_id" {
   description = "The ID of the dataset to create."
   type        = string
-  default = "reservatorios_externos_dataset"
+  default     = "reservatorios_externos_dataset"
 }
 
 variable "friendly_name" {
@@ -79,7 +79,7 @@ variable "location-big-query" {
   description = "The geographic location where the dataset should reside."
   type        = string
   default     = "US"
-  
+
 }
 
 variable "default_table_expiration_ms" {
@@ -96,7 +96,7 @@ variable "table_id" {
 }
 
 
-  
+
 variable "source_format" {
   description = "The format of the external data source."
   type        = string
@@ -107,7 +107,7 @@ variable "source_uris" {
   description = "The URIs of the external data source."
   type        = list(string)
   default     = ["gs://sauter-bucket-2025/raw/*.parquet"]
-  
+
 }
 
 # variable iam
