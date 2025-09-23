@@ -1,0 +1,25 @@
+# Ignorar ambientes virtuais
+venv/
+.env
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+
+# Ignorar cache do pip
+pip-wheel-metadata/
+*.egg-info/
+.eggs/
+
+# Ignorar dados e arquivos pesados
+*.parquet
+*.csv
+*.json
+*.log
+
+# Ignorar diretórios comuns
+.git
+.gitignore
+.dockerignore
+.idea
+.vscode

@@ -26,4 +26,4 @@ COPY . .
 EXPOSE 8080
 
 # Comando para rodar a API (FastAPI com uvicorn)
-CMD ["uvicorn", "ons_api.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "ons_api.main:app", "--bind", "0.0.0.0:8080", "--workers", "4"]

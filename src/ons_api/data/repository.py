@@ -2,14 +2,12 @@ from fastapi import FastAPI, Query, HTTPException
 from google.cloud import storage
 import pandas as pd
 import requests
-import os
-import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from io import BytesIO
 from datetime import datetime
-from ons_api.logging_config import setup_logging
+from ..core.logging_config import setup_logging
 
 logger = setup_logging()
-app = FastAPI(title="Repository API")
 
 class ONSRepository:
     PACKAGE_ID = "61e92787-9847-4731-8b73-e878eb5bc158"
@@ -87,28 +85,28 @@ class ONSRepository:
         years = range(start.year, end.year + 1)
         resources = self.search_all_resources()
 
-        dfs = []
-        for year in years:
+        dfs_by_year = {}
+
+        def process_year(year):
             resource = next((r for r in resources if str(year) in r["name"]), None)
             if not resource:
-                print(f"Not found any resource for {year}")
-                continue
-
+                logger.warning(f"No resource found for {year}")
+                return None, None
             df = self.download_csv_by_id(resource["id"])
 
-            if df is None:
-             logger.warning("DataFrame is none!")
-            else:
-                logger.info(f"Columns avaliable: {df.columns}")
             df["Data"] = pd.to_datetime(df["ear_data"], errors="coerce")
-            df = df[(df["Data"] >= start) & (df["Data"] < end)]
-            dfs.append(df)
-
-        if not dfs:
-            logger.error("Not found any data in the interval.")
+            df = df[(df["Data"] >= start_date) & (df["Data"] <= end_date)]
+            return year, df
+        
+        with ThreadPoolExecutor(max_workers=3) as pool: 
+            futures = {pool.submit(process_year, year): year for year in years}
+            for future in as_completed(futures):
+                year, df = future.result()
+                if year and df is not None:
+                    dfs_by_year[year] = df
+        if not dfs_by_year:
             raise HTTPException(status_code=404, detail="Not found any data in the interval.")
         
-        return pd.concat(dfs, ignore_index=True)
-    
+        return dfs_by_year
 
             
