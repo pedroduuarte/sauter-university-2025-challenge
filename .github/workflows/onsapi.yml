@@ -20,12 +20,9 @@ jobs:
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          workload_identity_provider: ${{ secretS.WORKLOAD_IDENTITY_PROVIDER }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.SERVICE_ACCOUNT }}
           export_default_credentials: true
-         
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker us-east1-docker.pkg.dev
 
       # 3. Autenticar Docker com Artifact Registry
       - name: Configure Docker for Artifact Registry
@@ -34,14 +31,14 @@ jobs:
       # 4. Build da imagem Docker
       - name: Build Docker image
         run: |
-          docker build -t us-east1-docker.pkg.dev/${PROJECT_ID}/sauter-projet-repo/ons-api .
+          docker build -t us-east1-docker.pkg.dev/${PROJECT_ID}/sauter-projet-repo/ons-api:latest .
         env:
           PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
 
       # 5. Push da imagem para Artifact Registry
       - name: Push Docker image
         run: |
-          docker push us-east1-docker.pkg.dev/${PROJECT_ID}/sauter-projet-repo/ons-api
+          docker push us-east1-docker.pkg.dev/${PROJECT_ID}/sauter-projet-repo/ons-api:latest
         env:
           PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
 
@@ -49,7 +46,7 @@ jobs:
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy sauter-cloud-run-service \
-            --image us-east1-docker.pkg.dev/${PROJECT_ID}/sauter-projet-repo/ons-api \
+            --image us-east1-docker.pkg.dev/${PROJECT_ID}/sauter-projet-repo/ons-api:latest \
             --region us-east1 \
             --platform managed \
             --allow-unauthenticated
