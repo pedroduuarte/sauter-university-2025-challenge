@@ -115,11 +115,11 @@ variable "source_uris" {
 variable "cloudrun_sa_name" {
   type        = string
   default     = "cloudrun-sa"
-  description = "Nome da service account para o Cloud Run"
+  description = "Service account name for Cloud Run"
 }
 
 variable "github_sa_name" {
   type        = string
   default     = "github-actions-sa"
-  description = "Nome da service account para o GitHub Actions"
+  description = "Service account name for GitHub Actions"
 }
