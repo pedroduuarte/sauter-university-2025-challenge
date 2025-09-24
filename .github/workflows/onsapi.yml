@@ -15,23 +15,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. Configurar o gcloud com Workload Identity Federation
-      - name: Set up Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
+      # 2. Autenticar no GCP usando Workload Identity Federation
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
         with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
           workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.SERVICE_ACCOUNT }}
-          export_default_credentials: true
 
-      # 3. Obter token de acesso e autenticar no Docker
+      # 3. Configurar gcloud
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      # 4. Obter token de acesso e autenticar no Docker
       - name: Get GCP access token
         run: echo "GCP_ACCESS_TOKEN=$(gcloud auth print-access-token)" >> $GITHUB_ENV
 
       - name: Authenticate Docker to Artifact Registry
         run: echo $GCP_ACCESS_TOKEN | docker login -u oauth2accesstoken --password-stdin https://us-east1-docker.pkg.dev
 
-      # 4. Build e push usando a ação do Docker
+      # 5. Build e push usando a ação do Docker
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
@@ -40,7 +44,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # 5. Deploy para Cloud Run
+      # 6. Deploy para Cloud Run
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy sauter-cloud-run-service \
