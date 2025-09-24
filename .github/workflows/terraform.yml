@@ -1,0 +1,82 @@
+name: 'Terraform CI/CD'
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - 'terraform/**'
+      - '.github/workflows/terraform.yml'
+  
+  pull_request:
+    paths:
+      - 'terraform/**'
+      - '.github/workflows/terraform.yml'
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+jobs:
+  terraform:
+    name: 'Terraform Plan and Apply'
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./terraform
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -check
+
+      - name: Terraform Plan
+        id: plancx
+        run: terraform plan -var="project_id=${{ vars.GCP_PROJECT_ID }}" -no-color
+        continue-on-error: false
+      
+      - name: Update Pull Request with Plan
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const output = `#### Terraform Plan 
+            <details><summary>Show Plan</summary>
+
+            \`\`\`terraform
+            ${{ steps.plancx.outputs.stdout }}
+            \`\`\`
+
+            </details>
+            
+            *Pushed by: @${{ github.actor }}, Action: ${{ github.event_name }}*`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+            '
+      - name: Terraform Apply
+        if: (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main') && github.event_name == 'push' && steps.plancx.outcome == 'success'
+        run: terraform apply -var="project_id=${{ vars.GCP_PROJECT_ID }}" -auto-approve
