@@ -15,30 +15,40 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. Autenticação GCP via Workload Identity Federation
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+      # 2. Configurar gcloud com Workload Identity
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
         with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
           workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.SERVICE_ACCOUNT }}
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          export_default_credentials: true
 
-      # 3. Configurar Docker para Artifact Registry
+      # 3. Autenticar Docker para Artifact Registry
       - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker us-east1-docker.pkg.dev --quiet
+        run: gcloud auth configure-docker us-east1-docker.pkg.dev
 
-      # 4. Build e push da imagem Docker
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4
-        with:
-          push: true
-          tags: us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/sauter-projet-repo/ons-api:latest
+      # 4. Build da imagem Docker
+      - name: Build Docker image
+        run: |
+          docker build -t us-east1-docker.pkg.dev/${PROJECT_ID}/sauter-projet-repo/ons-api:latest .
+        env:
+          PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
 
-      # 5. Deploy para Cloud Run
+      # 5. Push da imagem para Artifact Registry
+      - name: Push Docker image
+        run: |
+          docker push us-east1-docker.pkg.dev/${PROJECT_ID}/sauter-projet-repo/ons-api:latest
+        env:
+          PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+
+      # 6. Deploy para Cloud Run
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy sauter-cloud-run-service \
-            --image us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/sauter-projet-repo/ons-api:latest \
+            --image us-east1-docker.pkg.dev/${PROJECT_ID}/sauter-projet-repo/ons-api:latest \
             --region us-east1 \
             --platform managed \
             --allow-unauthenticated
+        env:
+          PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
