@@ -17,7 +17,19 @@ class GCPHandler:
         self.table_ref = os.getenv("BQ_TABLE")
         self.storage_client = storage.Client(project=self.project_id)
         self.bucket = self.storage_client.bucket(self.bucket_name)
-    
+
+    def _normalize_date(self, date_str: str) -> str:
+        """
+        Converte data para formato YYYY-MM-DD aceito pelo BigQuery.
+        Aceita entradas nos formatos DD-MM-YYYY e YYYY-MM-DD.
+        """
+        for fmt in ("%d-%m-%Y", "%Y-%m-%d"):
+            try:
+                return datetime.strptime(date_str, fmt).strftime("%Y-%m-%d")
+            except ValueError:
+                continue
+        raise ValueError(f"Formato de data inválido: {date_str}. Use DD-MM-YYYY ou YYYY-MM-DD.")
+        
     def blob_exists(self, blob_name: str) -> bool:
         """
         Check if a blob exists in GCS bucket.
@@ -85,6 +97,9 @@ class GCPHandler:
         """
         Query data directily from BQ with pagination
         """
+
+        start_date = self._normalize_date(start_date)
+        end_date = self._normalize_date(end_date)
         client = bigquery.Client(project=self.project_id)
 
         table = f"{self.project_id}.{self.bq_dataset}.{self.table_ref}"
@@ -93,18 +108,17 @@ class GCPHandler:
         offset = (page - 1) * page_size
 
         query = f"""
-            SELECT *
-            FROM `{table}`
-            WHERE ear_data >= @start_date
-            AND (@end_date IS NULL OR data <= @end_date)
-            ORDER BY ear_data
-            LIMIT @page_size OFFSET @offset
+        SELECT *
+        FROM `{table}`
+        WHERE ear_data BETWEEN @start_date AND @end_date
+        ORDER BY ear_data
+        LIMIT @page_size OFFSET @offset
         """
 
         job_config = bigquery.QueryJobConfig(
             query_parameters=[
-                bigquery.ScalarQueryParameter("start_date", "STRING", start_date),
-                bigquery.ScalarQueryParameter("end_date", "STRING", end_date),
+                bigquery.ScalarQueryParameter("start_date", "DATE", start_date),
+                bigquery.ScalarQueryParameter("end_date", "DATE", end_date),
                 bigquery.ScalarQueryParameter("page_size", "INT64", page_size),
                 bigquery.ScalarQueryParameter("offset", "INT64", offset),
             ]
@@ -113,22 +127,16 @@ class GCPHandler:
         df = client.query(query, job_config=job_config).to_dataframe()
 
         # também pegar o total de registros (sem paginação)
-        total_query = f"""
-            SELECT COUNT(*) as total
-            FROM `{table}`
-            WHERE ear_data >= @start_date
-            AND (@end_date IS NULL OR data <= @end_date)
+        count_query = f"""
+        SELECT COUNT(*) as total
+        FROM `{table}`
+        WHERE ear_data BETWEEN @start_date AND @end_date
         """
 
-        total_job_config = bigquery.QueryJobConfig(
-            query_parameters=[
-                bigquery.ScalarQueryParameter("start_date", "STRING", start_date),
-                bigquery.ScalarQueryParameter("end_date", "STRING", end_date),
-            ]
-        )
+        total_df = client.query(count_query, job_config=job_config).result().to_dataframe()
+        total = int(total_df["total"].iloc[0])
+        logger.info(f"BigQuery returned {len(df)} rows, total={total}")
 
-        total_result = client.query(total_query, job_config=total_job_config).to_dataframe()
-        total = int(total_result["total"][0])
 
         return df, total
 

@@ -45,27 +45,19 @@ def export_all_data(payload: PostFilter):
             logger.warning("No data found to export.")
             raise HTTPException(status_code=404, detail="No data found to export.")
 
-        if payload.upload:        
-            uploaded_files, did_upload = handler.upload_parquet_to_bucket(dfs_by_year)
-            if did_upload:
-                return {
-                "message": "Data exported successfully",
-                "files_uploaded": uploaded_files
-                }
-            else: 
-                return {
-                    "message": "No new data to export today",
-                    "files_already_exists": uploaded_files
-                }
-            
-        else: 
-            total_rows = sum(len(df) for df in dfs_by_year.values())
+       
+        uploaded_files, did_upload = handler.upload_parquet_to_bucket(dfs_by_year)
+        if did_upload:
             return {
-                "message": "Data fetched successfully",
-                "rows": total_rows,
-                "years": list(dfs_by_year.keys())
+            "message": "Data exported successfully",
+            "files_uploaded": uploaded_files
             }
-
+        else: 
+            return {
+                "message": "No new data to export today",
+                "files_already_exists": uploaded_files
+            }
+            
     except Exception as e:
         logger.error(f"Error on export-to-gcs: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

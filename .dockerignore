@@ -1,0 +1,17 @@
+# Ignorar ambientes virtuais (principal causa do erro)
+venv/
+*.venv
+__pycache__/
+
+
+# Ignorar diret�rios comuns
+.git/
+.gitignore
+.dockerignore
+
+# Ignorar arquivos de configura��o de IDEs e do sistema
+.vscode/
+.idea/
+*.pyc
+*.pyo
+*.pyd

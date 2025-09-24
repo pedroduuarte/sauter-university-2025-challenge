@@ -6,6 +6,10 @@ class ONSService:
         self.repo = ONSRepository()
         self.gcp_handler = GCPHandler()
 
+    def search_data(self, start_date=None, end_date=None):
+         """ Orquestra a busca de dados do repositório """ 
+         return self.repo.exctrat_files_from_interval(start_date, end_date) 
+
     def search_data_bq(self, start_date: str, end_date: str, page: int, page_size: int):
         """
         Orchestrate search from BQ
@@ -13,11 +17,17 @@ class ONSService:
         # search on BigQuery
         df, total = self.gcp_handler.query_bigquery(start_date, end_date, page, page_size)
 
+        for col in df.select_dtypes(include=["datetime64[ns]", "dbdate"]).columns:
+            df[col] = df[col].astype("string").fillna("")
+
+        for col in df.select_dtypes(exclude=["datetime64[ns]", "dbdate"]).columns:
+            df[col] = df[col].fillna("").astype(str)
+
         return {
-            "total": total,
+            "total": int(total),
             "page": page,
             "page_size": page_size,
-            "data": df.fillna(0).to_dict(orient="records")
+            "data": df.fillna("").astype(str).to_dict(orient="records")
         }
 
     '''
