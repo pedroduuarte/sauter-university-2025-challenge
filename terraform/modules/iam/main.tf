@@ -63,6 +63,12 @@ resource "google_project_iam_member" "github_bigquery" {
   member  = "serviceAccount:${google_service_account.github_sa.email}"
 }
 
+resource "google_project_iam_member" "github_workload_identity_user" {
+  project = var.project_id
+  role    = "roles/iam.workloadIdentityUser"
+  member  = "serviceAccount:${google_service_account.github_sa.email}"
+}
+
 resource "google_service_account_iam_binding" "github_sa_token_creator" {
   service_account_id = google_service_account.github_sa.name
   role = "roles/iam.serviceAccountTokenCreator"
@@ -71,8 +77,22 @@ resource "google_service_account_iam_binding" "github_sa_token_creator" {
   ]
 }
 
+# Service Account Admin
+resource "google_project_iam_member" "github_sa_admin" {
+  project = var.project_id
+  role    = "roles/iam.serviceAccountAdmin"
+  member  = "serviceAccount:${google_service_account.github_sa.email}"
+}
+
 resource "google_project_iam_member" "github_sa_user" {
   project = var.project_id
   role    = "roles/iam.serviceAccountUser"
   member  = "serviceAccount:${google_service_account.github_sa.email}"
 }
+
+resource "google_project_iam_member" "github_project_iam_admin" {
+  project = var.project_id
+  role    = "roles/resourcemanager.projectIamAdmin"
+  member  = "serviceAccount:${google_service_account.github_sa.email}"
+}
+
