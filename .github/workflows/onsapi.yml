@@ -22,6 +22,10 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           workload_identity_provider: ${{ secretS.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.SERVICE_ACCOUNT }}
+          export_default_credentials: true
+         
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-east1-docker.pkg.dev
 
       # 3. Autenticar Docker com Artifact Registry
       - name: Configure Docker for Artifact Registry
