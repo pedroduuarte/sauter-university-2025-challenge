@@ -94,8 +94,7 @@ class ONSRepository:
                 return None, None
             df = self.download_csv_by_id(resource["id"])
 
-            df["Data"] = pd.to_datetime(df["ear_data"], errors="coerce")
-            df = df[(df["Data"] >= start_date) & (df["Data"] <= end_date)]
+            df = df[(df["ear_data"] >= start_date) & (df["ear_data"] <= end_date)]
             return year, df
         
         with ThreadPoolExecutor(max_workers=3) as pool: 
