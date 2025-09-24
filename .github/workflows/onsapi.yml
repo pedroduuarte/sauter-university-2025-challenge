@@ -6,10 +6,6 @@ on:
       - main
       - feat_ons_api
 
-permissions:
-  contents: read
-  id-token: write 
-
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
@@ -19,43 +15,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. Autenticar no GCP usando Workload Identity Federation
+      # 2. Autenticação GCP via Workload Identity Federation
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.SERVICE_ACCOUNT }}
-
-      # 3. Configurar gcloud
-      - name: Set up gcloud
-        uses: google-github-actions/setup-gcloud@v2
-        with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      # 4. Obter token de acesso e autenticar no Docker
-      - name: Get GCP access token
-        run: echo "GCP_ACCESS_TOKEN=$(gcloud auth print-access-token)" >> $GITHUB_ENV
+      # 3. Configurar Docker para Artifact Registry
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-east1-docker.pkg.dev --quiet
 
-      - name: Authenticate Docker to Artifact Registry
-        run: echo $GCP_ACCESS_TOKEN | docker login -u oauth2accesstoken --password-stdin https://us-east1-docker.pkg.dev
-
-      # 5. Configurar Buildx com driver docker-container
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: |
-            image=moby/buildkit:latest
-
-      # 6. Build e push usando a ação do Docker
+      # 4. Build e push da imagem Docker
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
           push: true
           tags: us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/sauter-projet-repo/ons-api:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
-      # 7. Deploy para Cloud Run
+      # 5. Deploy para Cloud Run
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy sauter-cloud-run-service \
