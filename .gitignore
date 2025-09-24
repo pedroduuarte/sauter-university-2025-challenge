@@ -3,3 +3,7 @@
 .terraform.lock.hcl
 .terraform/
 *.parquet
+
+venv/
+__pycache__/
+*.pyc
