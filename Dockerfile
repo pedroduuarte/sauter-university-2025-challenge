@@ -22,4 +22,4 @@ COPY . .
 EXPOSE 8080
 
 # Comando de execução do Cloud Run
-CMD ["sh", "-c", "uvicorn src.ons_api.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+CMD ["sh", "-c", "uvicorn src.ons_api.main:app --host 0.0.0.0 --port $PORT"]
