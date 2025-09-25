@@ -1,0 +1,62 @@
+name: CI/CD - ONS API
+
+on:
+  push:
+    branches:
+      - main
+      - feat_ons_api
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout do código
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Autenticar no GCP com Workload Identity
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+
+      # 3. Instalar gcloud
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      # 4. Autenticar Docker no Artifact Registry
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-east1-docker.pkg.dev
+
+      # 5. Build da imagem Docker
+      - name: Build Docker image
+        run: |
+          docker build -t us-east1-docker.pkg.dev/${PROJECT_ID}/sauter-projet-repo/ons-api:latest .
+        env:
+          PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+
+      # 6. Push da imagem para Artifact Registry
+      - name: Push Docker image
+        run: |
+          docker push us-east1-docker.pkg.dev/${PROJECT_ID}/sauter-projet-repo/ons-api:latest
+        env:
+          PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+
+      # 7. Deploy para Cloud Run
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy sauter-cloud-run-service \
+            --image us-east1-docker.pkg.dev/${PROJECT_ID}/sauter-projet-repo/ons-api:latest \
+            --region us-east1 \
+            --platform managed \
+            --allow-unauthenticated
+        env:
+          PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
