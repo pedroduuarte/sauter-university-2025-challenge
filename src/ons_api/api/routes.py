@@ -15,7 +15,7 @@ handler = GCPHandler()
 @router.get("/data", tags=["ONS Data"])
 def get_data(
     start_date: str = Query(..., description="Start date (dd-mm-yyyy)", example="01-01-2024"),
-    end_date: Optional[str] = Query(None, description="End date (dd-mm-yyyy)", example="31-04-2024"),
+    end_date: Optional[str] = Query(None, description="End date (dd-mm-yyyy)", example="01-04-2024"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(50, ge=1, le=500, description="Page size"),
 ):

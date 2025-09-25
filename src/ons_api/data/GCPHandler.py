@@ -20,8 +20,8 @@ class GCPHandler:
 
     def _normalize_date(self, date_str: str) -> str:
         """
-        Converte data para formato YYYY-MM-DD aceito pelo BigQuery.
-        Aceita entradas nos formatos DD-MM-YYYY e YYYY-MM-DD.
+        Convert dates to format YYYY-MM-DD accepted by BigQuery.
+        Accept inputs on format DD-MM-YYYY and YYYY-MM-DD.
         """
         for fmt in ("%d-%m-%Y", "%Y-%m-%d"):
             try:
@@ -97,11 +97,9 @@ class GCPHandler:
         """
         Query data directily from BQ with pagination
         """
-
         start_date = self._normalize_date(start_date)
         end_date = self._normalize_date(end_date)
         client = bigquery.Client(project=self.project_id)
-
         table = f"{self.project_id}.{self.bq_dataset}.{self.table_ref}"
 
         # calculate pagination
@@ -123,41 +121,19 @@ class GCPHandler:
                 bigquery.ScalarQueryParameter("offset", "INT64", offset),
             ]
         )
-
         df = client.query(query, job_config=job_config).to_dataframe()
 
-        # também pegar o total de registros (sem paginação)
+        # get registry's count
         count_query = f"""
         SELECT COUNT(*) as total
         FROM `{table}`
         WHERE ear_data BETWEEN @start_date AND @end_date
         """
-
         total_df = client.query(count_query, job_config=job_config).result().to_dataframe()
         total = int(total_df["total"].iloc[0])
         logger.info(f"BigQuery returned {len(df)} rows, total={total}")
 
-
         return df, total
 
-    
-    '''def load_to_bigquery(self, df: pd.DataFrame):
-        """
-        load DataFrame to BigQuery (all columns as STRING)
-        """
-        client = bigquery.Client(project=self.project_id)
-
-        df = df.astype(str)
-
-        table = f"{self.project_id}.{self.bq_dataset}.{self.table_ref}"
-        job_config = bigquery.LoadJobConfig(
-            write_disposition = bigquery.WriteDisposition.WRITE_APPEND
-        )
-
-        job = client.load_table_from_dataframe(df, table, job_config=job_config)
-        job.result()
-
-        logger.info(f"Data loaded on BigQuery: {table}")
-        return table'''
 
 

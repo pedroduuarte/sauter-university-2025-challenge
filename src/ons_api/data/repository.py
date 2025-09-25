@@ -1,5 +1,4 @@
-from fastapi import FastAPI, Query, HTTPException
-from google.cloud import storage
+from fastapi import HTTPException
 import pandas as pd
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -28,7 +27,7 @@ class ONSRepository:
         package = data["result"]
         resources = package["resources"]
 
-        # filtrando arquivos csv
+        # filter csv files
         csv_resources = [
             {
                 "id": r["id"],
@@ -60,7 +59,7 @@ class ONSRepository:
     
     def date_validation(self, start_date: str, end_date: str): 
         """
-        Valida as datas para os intervalos
+        Validate dates for the intervals
         """
         try:
             start = datetime.strptime(start_date, "%d-%m-%Y")
@@ -79,7 +78,7 @@ class ONSRepository:
             
     def exctrat_files_from_interval(self, start_date: str, end_date: str) -> pd.DataFrame:
         """
-        Carrega os dados de acordo com o intervalo de datas passadas como parâmetro
+        Load files by the date interval
         """
         start, end = self.date_validation(start_date, end_date)
         years = range(start.year, end.year + 1)
