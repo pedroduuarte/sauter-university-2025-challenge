@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pandas
+pyarrow
+google-cloud-storage
+requests
+python-dotenv
+google-cloud-bigquery
+db-dtypes

@@ -1,37 +1,33 @@
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import HTTPException
 import pandas as pd
 import requests
-import os
-import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from io import BytesIO
 from datetime import datetime
+from ..core.logging_config import setup_logging
 
-app = FastAPI(title="Teste de API para dados dos reservatórios ONS")
-
+logger = setup_logging()
 
 class ONSRepository:
-    URL_PACKAGE_SEARCH = "https://dados.ons.org.br/api/3/action/package_search?q=ear-diario-por-reservatorio"
-    RESOURCES_CACHE = "resources.json"
+    PACKAGE_ID = "61e92787-9847-4731-8b73-e878eb5bc158"
+    URL_PACKAGE_SHOW = "https://dados.ons.org.br/api/3/action/package_show?id="
+    URL_RESOURCE_SHOW = "https://dados.ons.org.br/api/3/action/resource_show?id="
+
 
     def search_all_resources(self):
         """
-        Busca todos os resources disponíveis no dataset.
+        Search all resources avaliable on dataset.
         """
-        # checa se o cache existe para otimização de performance
-        if os.path.exists(self.RESOURCES_CACHE):
-            with open(self.RESOURCES_CACHE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        
-        # caso não exista, busca da ONS
-        resp = requests.get(ONSRepository.URL_PACKAGE_SEARCH)
+        resp = requests.get(f"{self.URL_PACKAGE_SHOW}{self.PACKAGE_ID}")
         if resp.status_code != 200:
+            logger.error(f"Error on trying to get all resources from EAR")
             raise HTTPException(status_code=500, detail="Erro ao consultar o package_search.")
         
         data = resp.json()
-        package = data["result"]["results"][0]  # primeiro dataset
+        package = data["result"]
         resources = package["resources"]
 
-        # filtrando arquivos csv
+        # filter csv files
         csv_resources = [
             {
                 "id": r["id"],
@@ -41,12 +37,20 @@ class ONSRepository:
             for r in resources if r["format"].lower() == "csv"
         ]
 
-        with open(self.RESOURCES_CACHE, "w", encoding="utf-8") as f:
-            json.dump(resources, f, ensure_ascii=False, indent=2)
-
         return csv_resources
     
-    def download_csv(self, url: str) -> pd.DataFrame:
+    def get_resource_url(self, resource_id: str):
+        resp = requests.get(f"{self.URL_RESOURCE_SHOW}{resource_id}")
+        if resp.status_code != 200:
+            raise HTTPException(status_code=500, detail=f"Failed to fetch resource id from: {resource_id}")
+        data = resp.json()
+        return data["result"]["url"]
+    
+    def download_csv_by_id(self, resource_id: str) -> pd.DataFrame:
+        """
+        Download the resource by the resource id
+        """
+        url = self.get_resource_url(resource_id)
         resp = requests.get(url)
         if resp.status_code != 200:
             raise HTTPException(status_code=500, detail=f"Failed to download data from {url}")
@@ -55,7 +59,7 @@ class ONSRepository:
     
     def date_validation(self, start_date: str, end_date: str): 
         """
-        Valida as datas para os intervalos
+        Validate dates for the intervals
         """
         try:
             start = datetime.strptime(start_date, "%d-%m-%Y")
@@ -74,31 +78,33 @@ class ONSRepository:
             
     def exctrat_files_from_interval(self, start_date: str, end_date: str) -> pd.DataFrame:
         """
-        Carrega os dados de acordo com o intervalo de datas passadas como parâmetro
+        Load files by the date interval
         """
         start, end = self.date_validation(start_date, end_date)
         years = range(start.year, end.year + 1)
         resources = self.search_all_resources()
 
-        dfs = []
-        for year in years:
+        dfs_by_year = {}
+
+        def process_year(year):
             resource = next((r for r in resources if str(year) in r["name"]), None)
             if not resource:
-                print(f"Not found any resource for {year}")
-                continue
+                logger.warning(f"No resource found for {year}")
+                return None, None
+            df = self.download_csv_by_id(resource["id"])
 
-            df = self.download_csv(resource["url"])
-            print("DEBUG DF:", type(df))
-            if df is None:
-             print("DataFrame é None!")
-            else:
-                print("Colunas disponíveis:", df.columns)
-            df["Data"] = pd.to_datetime(df["ear_data"], errors="coerce")
-            df = df[(df["Data"] >= start) & (df["Data"] < end)]
-            dfs.append(df)
-
-        if not dfs:
+            df = df[(df["ear_data"] >= start_date) & (df["ear_data"] <= end_date)]
+            return year, df
+        
+        with ThreadPoolExecutor(max_workers=3) as pool: 
+            futures = {pool.submit(process_year, year): year for year in years}
+            for future in as_completed(futures):
+                year, df = future.result()
+                if year and df is not None:
+                    dfs_by_year[year] = df
+        if not dfs_by_year:
             raise HTTPException(status_code=404, detail="Not found any data in the interval.")
         
-        return pd.concat(dfs, ignore_index=True)
+        return dfs_by_year
+
             
