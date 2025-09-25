@@ -8,15 +8,15 @@ import google.auth
 from google.adk.agents import LlmAgent
 from google.adk.tools import agent_tool
 
-application_default_credentials, _ = google.auth.default()
-credentials_config = BigQueryCredentialsConfig(
-  credentials=application_default_credentials
-)
-
 load_dotenv()
 
 PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
 DATASET = os.getenv("BIGQUERY_DATASET")
+
+application_default_credentials, _ = google.auth.default()
+credentials_config = BigQueryCredentialsConfig(
+  credentials=application_default_credentials
+)
 
 # configurção do BigQueryToolset
 tool_config = BigQueryToolConfig(write_mode=WriteMode.BLOCKED)
@@ -28,14 +28,16 @@ bigquery_toolset = BigQueryToolset(
 # Agente para responder perguntas sobre o site Sauter Digital
 sauter_agent = Agent(
     name="sauter_info_agent",
-    model="gemini-2.5-pro",
+    model="gemini-2.5-flash",
     description=(
         "Agente para responder perguntas sobre o site Sauter Digital."
     ),
     instruction=(
         """
         Você é um agente prestativo que responde perguntas sobre a empresa Sauter Digital.
-        Use a ferramenta google_search para encontrar informações no site da empresa, garantindo que toda pesquisa inclua o filtro 'site:https://sauter.digital/' para que os resultados sejam apenas desse domínio."
+        Use a ferramenta google_search para encontrar informações no site da empresa.
+        Garantindo que toda pesquisa inclua o filtro 'site:https://sauter.digital/'.
+        Para que os resultados sejam apenas desse domínio."
         """
     ),
     tools=[google_search],
@@ -55,6 +57,7 @@ bigquery_agent = Agent(
         Utilizeo projeto onde o ID é '{PROJECT}' o dataset '{DATASET}' para todas as consultas.
         A tabela que será utilizada é a 'trusted_data'.
         Caso seja necessario, adapte a query para atender às necessidades do usuário.
+        Se for pedido a porcentagem energetica de uma determinada bacia ou reservatorio, utilize a coluna 'ear_reservatorio_percentual'.
         Retorne os resultados de forma clara e objetiva, explicando os dados quando necessário.
         Se a consulta for complexa, explique os passos e forneça insights relevantes com base nos dados retornados.
         Caso não tenha informações suficientes para responder, peça detalhes adicionais ao usuário.
