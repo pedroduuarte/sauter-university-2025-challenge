@@ -28,7 +28,7 @@ bigquery_toolset = BigQueryToolset(
 # Agente para responder perguntas sobre o site Sauter Digital
 sauter_agent = Agent(
     name="sauter_info_agent",
-    model="gemini-2.5-flash",
+    model="gemini-2.5-pro",
     description=(
         "Agente para responder perguntas sobre o site Sauter Digital."
     ),
@@ -44,7 +44,7 @@ sauter_agent = Agent(
 # Agente para consultar dados no BigQuery
 bigquery_agent = Agent(
     name="bigquery_agent",
-    model="gemini-2.5-flash",
+    model="gemini-2.5-pro",
     description=(
         "Agente para buscar e responder perguntas usando dados do Google BigQuery."
     ),
@@ -54,6 +54,7 @@ bigquery_agent = Agent(
         Ao receber uma solicitação, identifique a necessidade do usuário, formule e execute queries SQL no BigQuery usando a ferramenta disponível.
         Utilizeo projeto onde o ID é '{PROJECT}' o dataset '{DATASET}' para todas as consultas.
         A tabela que será utilizada é a 'trusted_data'.
+        Caso seja necessario, adapte a query para atender às necessidades do usuário.
         Retorne os resultados de forma clara e objetiva, explicando os dados quando necessário.
         Se a consulta for complexa, explique os passos e forneça insights relevantes com base nos dados retornados.
         Caso não tenha informações suficientes para responder, peça detalhes adicionais ao usuário.
@@ -65,7 +66,7 @@ bigquery_agent = Agent(
 # Agente orquestrador
 coordinator = LlmAgent(
     name="HelpDeskCoordinator",
-    model="gemini-2.5-flash",
+    model="gemini-2.5-pro",
     instruction= 
     """
         Você é o agente orquestrador principal do Help Desk.
