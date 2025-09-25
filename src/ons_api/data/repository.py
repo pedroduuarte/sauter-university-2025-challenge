@@ -29,7 +29,7 @@ class ONSRepository:
 
         # filter csv files
         csv_resources = [
-            {
+            {   
                 "id": r["id"],
                 "name": r["name"],
                 "url": r["url"]
